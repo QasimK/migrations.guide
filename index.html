@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>migrations.guide</title>
+
+<noscript>
+  Loading...
+  <br>
+  (JavaScript is required)
+</noscript>
+
+<!--
+No break space: <
+en dash:-
+<!-- Common -->
+<style>
+  html {
+    /* Prevent shifting page when scrollbar appears */
+    width: 100vw;
+    overflow-x: hidden;
+  }
+
+  main {
+    text-align: center;
+  }
+
+  h1 {
+    text-align: center;
+  }
+
+  /* Flow Chart */
+  input[type=radio] {
+    display: none;
+  }
+  label {
+    display: inline-block;
+    cursor: pointer;
+    margin: 1em;
+    margin-top: 0;
+    border: 1px solid grey;
+    padding: 1em;
+    font-weight: bold;
+  }
+  input[type=radio]:checked + label {
+    font-style: normal;
+    color: black;
+    background-color: yellow;
+  }
+
+  /* Results */
+  #results {
+    text-align: left;
+    max-width: 40em;
+    margin: 0 auto;
+  }
+
+  details {
+    border: 2px solid black;
+    padding: 1em;
+  }
+
+  summary {
+    margin: -1em;
+    padding: 1em;
+    font-weight: bold;
+  }
+
+  pre {
+    background-color: #111;
+    color: #eee;
+    padding: 1em;
+  }
+</style>
+
+<script>
+  function defineBasicTemplate(name) {
+    const templateId = name;
+    const baseName = name.replace("template-", "");
+    const templateTagName = `x-${baseName}`;
+    const globalStyle = document.querySelector("style");
+
+    customElements.define(templateTagName,
+      class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById(templateId).content;
+          const shadowRoot = this.attachShadow({mode: 'open'});
+          shadowRoot.appendChild(globalStyle.cloneNode(true));
+          shadowRoot.appendChild(template.cloneNode(true));
+        }
+      }
+    );
+  }
+</script>
+
+
+<!-- Components -->
+<template id="template-decision">
+  <style>
+  </style>
+  <section class="decision">
+    <p class="question">
+      <slot name="question">NEED QUESTION</slot>
+    </p>
+    <div class="choices">
+      <slot name="choices">NEED CHOICSE</slot>
+    </div>
+  </section>
+</template>
+
+<!-- Decisions -->
+<div id="decisionTemplates">
+  <template id="template-decision-root">
+    <x-decision>
+      <span slot="question">I am using...</span>
+      <!--<input slot="choices" type="radio" name="x" id="1" value="pg9.6" next="verb">
+      <label slot="choices" for="1">Postgres 9.6</label>-->
+      <input slot="choices" type="radio" name="x" id="2" value="pg11" next="verb">
+      <label slot="choices" for="2">Postgres 11</label>
+      <!--<input slot="choices" type="radio" name="x" id="3" value="pg12" next="verb">
+      <label slot="choices" for="3">Postgres 12</label>
+      <input slot="choices" type="radio" name="x" id="4" value="pg13" next="verb">
+      <label slot="choices" for="4">Postgres 13</label>-->
+    </x-decision>
+  </template>
+
+  <template id="template-decision-verb">
+    <x-decision>
+      <span slot="question">I want to...</span>
+      <input slot="choices" type="radio" name="x" id="1" value="add" next="add">
+      <label slot="choices" for="1">Add Something</label>
+      <!--<option slot="choices" next="change" value="change">Change Something</option>-->
+      <!--<option slot="choices" next="drop" value="drop">Remove Something</option>-->
+
+      <input slot="choices" type="radio" name="x" id="4" value="data" next="result">
+      <label slot="choices" for="4">Alter Data</label>
+    </x-decision>
+  </template>
+
+  <template id="template-decision-add">
+    <x-decision>
+      <span slot="question">I want to...</span>
+      <input slot="choices" type="radio" name="x" id="1" value="column" next="is-null">
+      <label slot="choices" for="1">Add a Column</label>
+
+      <input slot="choices" type="radio" name="x" id="2" value="index" next="result" >
+      <label slot="choices" for="2">Add a (Unique) Index</label>
+
+      <input slot="choices" type="radio" name="x" id="3" value="constraint" next="result" >
+      <label slot="choices" for="3">Add a Constraint</label>
+
+      <input slot="choices" type="radio" name="x" id="4" value="foreign-key" next="result" >
+      <label slot="choices" for="4">Add a Foreign Key</label>
+    </x-decision>
+  </template>
+
+  <template id="template-decision-is-null">
+    <x-decision>
+      <span slot="question">Is the column NULLable?</span>
+      <input slot="choices" type="radio" name="x" id="1" value="null" next="has-default">
+      <label slot="choices" for="1">NULLable</label>
+
+      <input slot="choices" type="radio" name="x" id="2" value="not-null" next="result">
+      <label slot="choices" for="2">NOT NULLable</label>
+    </x-decision>
+  </template>
+
+  <template id="template-decision-has-default">
+    <x-decision>
+      <span slot="question">Is there a database-side default value?</span>
+      <input slot="choices" type="radio" name="x" id="1" value="with-default" next="result">
+      <label slot="choices" for="1">With a Default</label>
+
+      <input slot="choices" type="radio" name="x" id="2" value="without-default" next="result">
+      <label slot="choices" for="2">Without a Default</label>
+    </x-decision>
+  </template>
+
+  <template id="template-decision-change">
+    <x-decision>
+      <span slot="question">I want to...</span>
+      <!--
+        Rename a Column
+        Make Column NOT NULL
+      -->
+    </x-decision>
+  </template>
+
+  <template id="template-decision-drop">
+    <x-decision>
+      <span slot="question">I want to...</span>
+      <!--
+        Drop a Column
+      -->
+    </x-decision>
+  </template>
+</div>
+
+<!-- Init Decisions -->
+<script>
+  function addDecision(name) {
+    if (name == "result") {
+      return;
+    }
+
+    const decisions = document.querySelector("#decisions");
+    const tag = `x-decision-${name}`;
+
+    const results = document.querySelector("#results").children;
+    for (let element of results) {
+      element.remove();
+    }
+
+    // Add new
+    const decision = document.createElement(tag);
+    decisions.appendChild(decision);
+  };
+
+  function getActiveRadio(radioElements) {
+    const active = Array.from(radioElements).find(r => r.checked)
+    return (active && active.value) || "";
+  }
+
+  function getAnswer() {
+    let result = ""
+    const decisions = document.querySelector("#decisions").children;
+    for (let decision of decisions) {
+      const answer = getActiveRadio(
+        decision
+        .shadowRoot
+        .querySelectorAll('input[type="radio"]')
+      );
+      result += `__${answer}`
+    }
+
+    console.log("result =", result);
+    return result;
+  };
+
+  function addResult() {
+    const results = document.querySelector("#results");
+    const answer = getAnswer();
+    const result = document.createElement(`x-result${answer}`);
+    console.log("adding result", result)
+    results.appendChild(result);
+  };
+
+  customElements.define('x-decision',
+    class extends HTMLElement {
+      constructor() {
+        super();
+        const template = document.querySelector('#template-decision').content;
+        const shadowRoot = this.attachShadow({mode: 'open'});
+        shadowRoot.appendChild(template.cloneNode(true));
+
+        // Listen to choice selection
+        const radioElements = shadowRoot.host.querySelectorAll('input[type="radio"]');
+        for (let radioElement of radioElements) {
+          radioElement.addEventListener('change', (event) => {
+            if (event.target.checked) {
+              removeFuture(this.parentNode.host);
+              addDecision(event.target.getAttribute("next"));
+              addResult();
+            }
+          });
+        }
+      }
+    }
+  );
+
+  function removeFuture(decisionElement) {
+    removeNextSiblings(decisionElement);
+    const results = document.querySelector('#results');
+    while (results.firstChild) {
+      results.removeChild(results.firstChild);
+    }
+  }
+
+  function removeNextSiblings(element) {
+    let toRemove = []
+    let curElement = element.nextElementSibling;
+    while (curElement) {
+      toRemove.push(curElement)
+      curElement = curElement.nextElementSibling;
+    }
+    for (ele of toRemove) {
+      ele.remove();
+    }
+  }
+
+  const decisionTemplates = document.querySelector('#decisionTemplates').children;
+  for (let template of decisionTemplates) {
+    defineBasicTemplate(template.id);
+  };
+</script>
+
+
+<!-- Result Base Templates -->
+<template id="template-result-safe">
+  <style>
+    h1 {
+      color: green;
+    }
+  </style>
+  <div>
+    <h1>Safe</h1>
+    <div><slot name="content"></slot></div>
+  </div>
+</template>
+
+<template id="template-result-alternative">
+  <style>
+    h1 {
+      color: orange;
+    }
+  </style>
+  <div>
+    <h1>Safe Alternative Possible</h1>
+    <div><slot name="content"></slot></div>
+  </div>
+</template>
+
+<template id="template-result-unsafe">
+  <style>
+    h1 {
+      color: red;
+    }
+  </style>
+  <div>
+    <h1>Unsafe</h1>
+    <div><slot name="content"></slot></div>
+  </div>
+</template>
+
+<!-- Result Templates -->
+<div id="resultTemplates">
+  <template id="template-result__pg11__add__column__null__with-default">
+    <x-result-alternative>
+      <div slot="content">
+        <p>It is unsafe to add a new column:
+        <pre><code>ALTER TABLE table ADD COLUMN column INT DEFAULT 0;</code></pre>
+        <p>
+          All queries of every kind will be blocked until the migration is
+          complete because an <code>ACCESS EXCLUSIVE</code> lock is required.
+        <p>
+          However, if the application is written with this in mind and migration
+          timeouts are used, then it is possible to <em>eventually</em> do this
+          safely.
+        <p>
+          See the <strong>HOW-TO: Obtain a lock safely for a migration</strong> section
+          below for a step-by-step guide on what to do.
+
+        <x-result-snippet-access-exclusive-lock></x-result-snippet-access-exclusive-lock>
+        <x-result-snippet-lock-queue></x-result-snippet-lock-queue>
+        <x-result-snippet-apps-blocking-migrations></x-result-snippet-apps-blocking-migrations>
+        <x-result-snippet-how-to-safe-apps></x-result-snippet-how-to-safe-apps>
+        <x-result-snippet-how-to-get-lock></x-result-snippet-how-to-get-lock>
+      </div>
+    </x-result-unsafe>
+  </template>
+
+  <template id="template-result__pg11__add__column__null__without-default">
+    <x-result-alternative>
+      <div slot="content">
+        <p>It is unsafe to add a new column:
+        <pre><code>ALTER TABLE table ADD COLUMN column INT;</code></pre>
+        <p>
+          All queries of every kind will be blocked until the migration is
+          complete because an <code>ACCESS EXCLUSIVE</code> lock is required.
+        <p>
+          However, if the application is written with this in mind and migration
+          timeouts are used, then it is possible to <em>eventually</em> do this
+          safely.
+        <p>
+          See the <strong>HOW-TO: Obtain a lock safely for a migration</strong> section
+          below for a step-by-step guide on what to do.
+        <p>
+          <strong>Warning:</strong> <code>NULL</code> columns cannot be made
+          into <code>NOT NULL</code> columns safely after-the-fact until
+          Postgres 12. So if you are actually intending to make a <code>NOT NULL</code>
+          column, then create a <code>NOT NULL</code> column with a dummy default value.
+
+        <x-result-snippet-access-exclusive-lock></x-result-snippet-access-exclusive-lock>
+        <x-result-snippet-lock-queue></x-result-snippet-lock-queue>
+        <x-result-snippet-apps-blocking-migrations></x-result-snippet-apps-blocking-migrations>
+        <x-result-snippet-how-to-safe-apps></x-result-snippet-how-to-safe-apps>
+        <x-result-snippet-how-to-get-lock></x-result-snippet-how-to-get-lock>
+      </div>
+    </x-result-unsafe>
+  </template>
+
+  <template id="template-result__pg11__add__column__not-null">
+    <x-result-alternative>
+      <div slot="content">
+        <x-result-snippet-access-exclusive-lock></x-result-snippet-access-exclusive-lock>
+      </div>
+    </x-result-unsafe>
+  </template>
+
+  <template id="template-result__pg11__add__index">
+    <x-result-alternative>
+      <div slot="content">
+        <p>It is strictly unsafe to add an index the "normal" way:
+        <pre style="white-space: nowrap"><code>
+          CREATE INDEX name_idx ON table (column);
+          <br>
+          CREATE UNIQUE INDEX name_idx ON table (column);
+        </code></pre>
+        <p>
+          A full table scan is required which will take a long time to complete
+          for large tables, and, as a <code>SHARE</code> lock is obtained, all
+          <strong>writes will be blocked</strong> until the migration is complete.
+        <h2>Safe Alternative</h2>
+        <p>
+          Create an index <code>CONCURRENTLY</code>. This happens in the background
+          and will not block writes.
+        <ol>
+          <li>
+            Execute the following command in a persistent shell (this could take
+            many hours):
+            <pre style="white-space: nowrap"><code>
+              SET statement_timeout = 0;
+              <br>
+              SET lock_timeout = 0;
+              <br>
+              <br>
+              CREATE INDEX CONCURRENTLY idx_name ON table (column);
+            </code></pre>
+          <li>
+            When the command returns, check the index was created successfully—invalid indexes are marked with <code>INVALID</code>:
+            <pre style="white-space: nowrap"><code>
+              \d table
+            </code></pre>
+          <li>
+            If it was unsuccessful, try again after dropping
+            the index:
+            <pre><code>DROP INDEX name_idx;</code></pre>
+            (Note: it could be unsuccessful due to deadlocks or a uniqueness
+            violation.)
+        </ol>
+
+        <hr>
+        <x-result-snippet-concurrently-downside></x-result-snippet-concurrently-downside>
+
+        <p>
+          The explanations below describe the failure conditions of the unsafe
+          way of adding indexes. If the safe alternative is followed, then these
+          problems do not apply.
+
+        <x-result-snippet-share-lock></x-result-snippet-share-lock>
+        <x-result-snippet-lock-queue></x-result-snippet-lock-queue>
+        <x-result-snippet-apps-blocking-migrations></x-result-snippet-apps-blocking-migrations>
+        <x-result-snippet-how-to-get-lock></x-result-snippet-how-to-get-lock>
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg9.6__data">
+    <x-result-alternative>
+      <div slot="content">
+        <p>The following kinds of data migrations are unsafe:
+<pre><code><!--
+-->UPDATE table SET column=value;
+UPDATE table SET column=value WHERE condition;
+</code></pre>
+        <p>
+          Where many rows are updated, this will take a long time to complete,
+          and, as a <code>FOR UPDATE</code> lock is obtained on the selected rows,
+          <strong>writes to those rows will be blocked</strong> until the
+          migration is complete.
+        <h2>Safe Alternative</h2>
+        <p>
+          Modify the data in batches that take about a second each to execute.
+          This will reduce the amount of time the lock is held.
+        <p>Execute the script in a persistent shell:
+<pre><code><!--
+-->#!/bin/bash
+set -e
+for i in {0..100}; do
+  echo "=== === === Batch#{i}"
+  psql -v ON_ERROR_STOP=1 -v v1="${i}" -f migration.sql
+done
+</code></pre>
+        <p><code>migration.sql</code> file:
+<pre><code><!--
+-->SET statement_timeout = 2000;
+
+begin;
+\timing on
+
+UPDATE table
+SET column=value
+WHERE
+      id >= (:v1 + 0) * 1000
+  AND id <  (:v1 + 1) * 1000
+;
+
+commit;
+</code></pre>
+        <p>
+          In this example, we use the primary key of the table to chunk the rows
+          into batches of 1000, and the start and stop range <code>0..100</code>
+          was determined manually. Also, the transaction is useless, but it may be
+          necessary for more complex migrations. Furthermore, we enable timing so
+          that we have insight on how long each update takes. Finally, it is
+          trivial to stop/resume by altering the start of the range.
+
+        <hr>
+        <x-result-snippet-for-update-lock></x-result-snippet-for-update-lock>
+        <x-result-snippet-row-exclusive-lock></x-result-snippet-row-exclusive-lock>
+      </div>
+    </x-result-unsafe>
+  </template>
+
+  <template id="template-result__pg11__data">
+    <x-result__pg9.6__data></x-result__pg9.6__data>
+  </template>
+
+  <template id="template-result__pg12__data">
+    <x-result__pg9.6__data></x-result__pg9.6__data>
+  </template>
+
+  <template id="template-result__pg13__data">
+    <x-result__pg9.6__data></x-result__pg9.6__data>
+  </template>
+
+  <!-- Snippets -->
+  <template id="template-result-snippet-access-exclusive-lock">
+    <aside>
+      <p>
+      <details>
+        <summary>How can the <code>ACCESS EXCLUSIVE</code> lock break applications?</summary>
+        <p>
+          An <code>ACCESS EXCLUSIVE</code> lock conflicts with
+          <strong>everything</strong>, including:
+        <ul>
+          <li><code>SELECT</code>
+          <li><code>INSERT</code>
+          <li><code>UPDATE</code>
+          <li><code>DELETE</code>
+        </ul>
+        <p>
+          If a transaction is used, the rows will be locked until the
+          transaction is committed.
+        <p>
+          <strong>Warning:</strong> A migration needing this lock will block
+          other queries as soon as the SQL is sent to Postgres (even while waiting
+          for a lock). See <strong>How can the lock queue break applications?</strong>
+    </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-share-lock">
+    <aside>
+      <p>
+      <details>
+        <summary><!--
+       -->How can the <code>SHARE</code> lock break applications?
+        </summary>
+        <p>
+          From the perspective of an application, the <code>SHARE</code> lock
+          will block <strong>writes</strong> to the table, i.e.:
+        <ul>
+          <li><code>INSERT</code>
+          <li><code>UPDATE</code>
+          <li><code>DELETE</code>
+        </ul>
+        <p>
+          If a transaction is used, the rows will be locked until the
+          transaction is committed.
+        <p>
+          <strong>Warning:</strong> A migration needing this lock will block
+          writes as soon as the SQL is sent to Postgres (even while waiting
+          for a lock). See <strong>How can the lock queue break applications?</strong>
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-row-exclusive-lock">
+    <aside>
+      <p>
+      <details>
+        <summary><!--
+       -->Can the <code>ROW EXCLUSIVE</code> lock break applications?
+        </summary>
+        <p>
+          Technically, a table-level <code>ROW EXCLUSIVE</code> is obtained as
+          well as this is an <code>UPDATE</code>. However, this doesn't conflict
+          with the kind of queries that applications do including other
+          <code>UPDATE</code> SQL.
+        <p>
+          On the other hand, it <em>can</em> conflict with other migrations, so
+          make sure you only do one migration at a time, including data migrations.
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-for-update-lock">
+    <aside>
+      <p>
+      <details>
+        <summary><!--
+       -->How can the <code>FOR UPDATE</code> lock break applications?
+        </summary>
+        <p>
+          From the perspective of an application, the row-level <code>FOR UPDATE</code>
+          lock will block <strong>some writes</strong> to the table, e.g.:
+        <ul>
+          <li><code>UPDATE</code>
+          <li><code>SELECT FOR UPDATE</code>
+          <li><code>DELETE</code>
+        </ul>
+        <p>
+          This lock only blocks the selected rows, rather than the whole table.
+          However, <code>UPDATE table SET column=value;</code> will effectively
+          lock the entire table.
+        <p>
+          If a transaction is used, the rows will be locked until the
+          transaction is committed.
+        <p>
+          Therefore it's important to reduce the number of rows blocked, and to
+          reduce the amount of time those rows are blocked, in order to prevent
+          the application from being blocked with its update operations.
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-lock-queue">
+    <aside>
+      <p>
+      <details>
+        <summary>How can the lock queue break applications?</summary>
+        <p>
+          A migration can block application queries even while it is waiting
+          for its turn to execute.
+        <ol>
+          <li>Migration SQL is sent to Postgres
+          <li>It cannot execute right now because it needs to obtain a lock
+          <li>The migration enters the lock queue
+          <li>
+            Now, the application executes another query that needs a lock that
+            would conflict with the migration's lock.
+          <li>
+            The application query enters the lock queue <em>behind</em> the
+            migration SQL.
+          <li>
+            The application query is blocked on the migration SQL which is blocked
+            on some other application query.
+        </ol>
+        <p>
+          So even though the application query <em>could</em> execute because
+          the migration is not executing, Postgres will not do this!
+        <p>
+          So even if the migration <em>would</em> execute instantly
+          <em>if only it had the lock</em>, it doesn't matter. It starts to block
+          other conflicting queries immediately.
+        <p>
+          This could mean the application has temporarily degraded performance,
+          and worse, if the migration is taking too long, actual queries and
+          requests will start to fail until the migration has completed.
+        <p>
+          Therefore, you <em>should</em> use a <code>statement_timeout</code>
+          that is about a second long.
+        <pre><code>SET statement_timeout = 1000;</code></pre>
+        <p>
+          (Note that a <code>lock_timeout</code> is a subset of
+          a <code>statement_timeout</code>, but queries are blocked while in
+          the lock queue and while the migration is executing therefore
+          a <code>statement_timeout</code> is the appropriate timeout to use.)
+        <p>
+          Since this is likely to timeout for busy tables, an automatic retry
+          script <em>should</em> be used. See
+          <strong>HOW-TO: Obtain a lock safely for a migration</strong>.
+    </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-apps-blocking-migrations">
+    <aside>
+      <p>
+      <details>
+        <summary>How can applications block migrations?</summary>
+        <p>
+          Lock queue.
+        <p>
+          Migration can never obtain a lock because it uses a
+          <code>lock_timeout</code> because it must never break applications.
+        <p>
+          When a query or migration requires a lock, it will enter the lock queue.
+        <p>
+          Any locks that conflict with a lock in the queue will have to wait
+          for its turn.
+        <p>
+          This means application queries can be blocked by migrations.
+        <p>
+          It <strong>also</strong> means that migrations can be blocked by
+          application queries.
+        <p>
+          Therefore, applications should keep queries and transactions short.
+        <p>
+          Try to break transactions into smaller chunks that are less than a minute
+          long, and add a sleep time in between these chunks.
+        <p>
+          This will give a chance for a migration to obtain a lock before its
+          <code>lock_timeout</code> expires.
+        <p>
+          Of course, it is likely that a migration will need to be retried using
+          a bash script.
+        <p>
+          A migration <em>should</em> use a short <code>lock_timeout</code> and
+          a slightly longer <code>statement_timeout</code> when it is retrying.
+        <p>
+          This is so that the application does not become degraded.
+        <p>
+          There are usually two parts to a server application: the client-facing
+          application such as an API, and background services/jobs such as crons
+          or message processors.
+        <p>
+          The client-facing part usually naturally has short queries and
+          transactions. However, background tasks can have long-running
+          transactions and queries that can block migrations.
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-how-to-safe-apps">
+    <aside>
+      <p>
+      <details>
+        <summary>HOW-TO: Write applications to not block migrations</summary>
+        <p>
+          <strong>GOAL:</strong> The application needs to give migrations a
+          chance to obtain a lock.
+        <p>
+          <strong>SOLUTION:</strong> Structure application queries and
+          transactions so that there is opportunity for other processes to
+          obtain a lock.
+        <p>Actions:
+        <ul>
+          <li>
+            All transactions should be as short as possible, ideally less than
+            minute long.
+          <li>
+            Split up long-running transactions into smaller chunks. Consider using
+            a separate staging table for the job.
+          <li>
+            In between these smaller transactions, sleep for a few seconds to give
+            other processes a chance to get a lock on the table.
+          <li>
+            Even with this, for extremely busy tables, it will be necessary to be
+            able to temporarily shut down background jobs leaving only the
+            absolutely necessary parts of the application running.
+          <li>
+            Background tasks <em>should</em> be written to handle immediate
+            termination, and there <em>should</em> be a mechanism to immediately
+            or gracefully stop these tasks.
+        </ul>
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-how-to-get-lock">
+    <aside>
+      <p>
+      <details>
+        <summary>HOW-TO: Obtain a lock safely for a migration</summary>
+        <p>
+          <strong>GOAL:</strong> Execute a migration that obtains a dangerous lock
+          without blocking application queries.
+        <p>
+          Execute the migration using a script to automatically retry, and use a
+          short <code>lock_timeout</code> with a sleep time to minimise the
+          impact on the application.
+        <p>The retry script:
+<pre><code><!--
+-->#!/bin/bash
+while true; do
+  date
+  psql -qX -v ON_ERROR_STOP=1 -f migration.sql && echo "done" && break
+  sleep 1
+done
+</code></pre>
+        <p>Example <code>migration.sql</code> file:
+        <pre style="white-space: nowrap"><code>
+          SET lock_timeout = 100;
+          <br>
+          SET statement_timeout = 1000;
+          <br>
+          <br>
+          ALTER TABLE table ADD COLUMN column INT DEFAULT 0;
+        </code></pre>
+        <p>
+          Every one second queries will be blocked for 100 milliseconds, except when
+          the migration has got its lock, then queries could be blocked for 1000
+          milliseconds.
+      </details>
+    </aside>
+  </template>
+
+  <template id="template-result-snippet-concurrently-downside">
+    <aside>
+      <p>
+      <details>
+        <summary>What are the downsides of <code>CONCURRENTLY</code>?</summary>
+        <p>
+          There are <strong>virtually no downsides</strong>, but all the
+          caveats are listed below anyway for curiosity:
+        <ul>
+          <li>
+            More total work is performed and overall it takes longer to create
+            the index as two scans of the table occur rather than one.
+          <li>
+            The additional CPU and I/O load might slow down other operations
+            (versus stopping all write operations to build the index).
+          <li>
+            All existing transactions that modify or use the index must
+            terminate before the index can be used.
+          <li>
+            The uniqueness constraint will be enforced half-way through the index
+            creation and will continue to be enforced even if it fails to build.
+          <li>
+            Only one index may be built <code>CONCURRENTLY</code> at any given
+            time on a table.
+          <li>
+            A transaction cannot be used.
+        </ul>
+        <p>
+          Partitioned tables separately require indexes on each partition first.
+      </details>
+    </aside>
+  </template>
+
+</div>
+
+
+<!-- Result init -->
+<script>
+  defineBasicTemplate("template-result-safe");
+  defineBasicTemplate("template-result-alternative");
+  defineBasicTemplate("template-result-unsafe");
+
+  const resultTemplates = document.querySelector('#resultTemplates').children;
+  for (let template of resultTemplates) {
+    defineBasicTemplate(template.id);
+  };
+</script>
+
+
+<!-- Start -->
+<main>
+  <div style="display: block">
+    <h1 style="display: inline">migrations.guide</h1>
+    <br>
+    <sub>Will my migration cause an application outage?</sub>
+  </div>
+  <section id="decisions">
+    <x-decision-root></x-decision-root>
+  </section>
+  <section id="results"></section>
+</main>
