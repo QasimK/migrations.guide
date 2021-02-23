@@ -3,16 +3,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>migrations.guide</title>
 
-<noscript>
-  Loading...
-  <br>
-  (JavaScript is required)
-</noscript>
+<!-- Text
+Non-breaking space: <
+En dash:-
+Em dash:—
+-->
 
-<!--
-No break space: <
-en dash:-
-<!-- Common -->
 <style>
   html {
     /* Prevent shifting page when scrollbar appears */
@@ -28,7 +24,7 @@ en dash:-
     text-align: center;
   }
 
-  /* Flow Chart */
+  /* Decision Flow Chart */
   input[type=radio] {
     display: none;
   }
@@ -54,6 +50,16 @@ en dash:-
     margin: 0 auto;
   }
 
+  .safe {
+    color: green;
+  }
+  .alternative {
+    color: orange;
+  }
+  .unsafe {
+    color: red;
+  }
+
   details {
     border: 2px solid black;
     padding: 1em;
@@ -72,107 +78,166 @@ en dash:-
   }
 </style>
 
-<script>
-  function defineBasicTemplate(name) {
-    const templateId = name;
-    const baseName = name.replace("template-", "");
-    const templateTagName = `x-${baseName}`;
-    const globalStyle = document.querySelector("style");
 
-    customElements.define(templateTagName,
-      class extends HTMLElement {
-        constructor() {
-          super();
-          const template = document.getElementById(templateId).content;
-          const shadowRoot = this.attachShadow({mode: 'open'});
-          shadowRoot.appendChild(globalStyle.cloneNode(true));
-          shadowRoot.appendChild(template.cloneNode(true));
+<!-- Create Elements Script -->
+<script>
+  "use strict";
+
+  function createElement(elementName, slotValues) {
+    slotValues = slotValues || [];
+
+    const templateName = elementToTemplateName(elementName);
+    const template = document.querySelector(`#${templateName}`);
+    if (template == null) {
+      console.log("No template found: ", templateName)
+      return null;
+    }
+
+    const baseElement = template.content.firstElementChild;
+
+    const extraSlotValues = baseElement.querySelectorAll("[slot]");
+    const allSlotValues = [...slotValues, ...extraSlotValues];
+
+    const baseName = baseElement.localName;
+    let filledElement;
+    if (baseName.includes("-")) {
+      filledElement = createElement(baseName, allSlotValues);
+    } else {
+      const newElement = baseElement.cloneNode(true);
+      filledElement = replaceSlotsWithValues(newElement, allSlotValues);
+    }
+
+    for (let customElement of getDescendants(filledElement)) {
+      if (customElement.localName.includes("-")) {
+        const newCustomElement = createElement(customElement.localName);
+        customElement.parentNode.insertBefore(newCustomElement, customElement);
+        customElement.parentNode.removeChild(customElement);
+      }
+    }
+
+    return filledElement;
+  };
+
+  function replaceSlotsWithValues(element, slotValues) {
+    const newElement = element.cloneNode(true);
+    for (let slot of newElement.querySelectorAll('slot')) {
+      const slotName = slot.getAttribute("name");
+      for (let slotValue of slotValues) {
+        if (slotValue.getAttribute("slot") == slotName) {
+          const copy = slotValue.cloneNode(true);
+          slot.parentNode.insertBefore(copy, slot);
         }
       }
-    );
+      slot.parentNode.removeChild(slot);
+    }
+    return newElement;
+  };
+
+  function templateToElementName(templateName) {
+    const baseName = templateName.replace("template-", "");
+    return `x-${baseName}`;
   }
+
+  function elementToTemplateName(templateName) {
+    const baseName = templateName.replace("x-", "");
+    return `template-${baseName}`;
+  };
+
+  function getDescendants(node) {
+    let children = childNodesToArray(node);
+    for (let i = 0; i < node.childElementCount; i++) {
+      children = [...children, ...getDescendants(node.children[i])];
+    }
+    return children;
+  };
+
+  function childNodesToArray(node) {
+    let all = [];
+    for (let i = 0; i < node.childElementCount; i++) {
+      all.push(node.children[i]);
+    }
+    return all;
+  };
 </script>
 
-
-<!-- Components -->
+<div></div>
+<!-- Decision Base Templates -->
 <template id="template-decision">
-  <style>
-  </style>
   <section class="decision">
     <p class="question">
       <slot name="question">NEED QUESTION</slot>
     </p>
-    <div class="choices">
+    <form class="choices">
       <slot name="choices">NEED CHOICSE</slot>
-    </div>
+    </form>
   </section>
 </template>
 
-<!-- Decisions -->
+<!-- Decision Templates -->
 <div id="decisionTemplates">
   <template id="template-decision-root">
     <x-decision>
       <span slot="question">I am using...</span>
-      <!--<input slot="choices" type="radio" name="x" id="1" value="pg9.6" next="verb">
-      <label slot="choices" for="1">Postgres 9.6</label>-->
-      <input slot="choices" type="radio" name="x" id="2" value="pg11" next="verb">
-      <label slot="choices" for="2">Postgres 11</label>
-      <!--<input slot="choices" type="radio" name="x" id="3" value="pg12" next="verb">
-      <label slot="choices" for="3">Postgres 12</label>
-      <input slot="choices" type="radio" name="x" id="4" value="pg13" next="verb">
-      <label slot="choices" for="4">Postgres 13</label>-->
+      <input slot="choices" type="radio" name="x" id="root1" value="pg96" next="verb">
+      <label slot="choices" for="root1">Postgres 9.6</label>
+      <input slot="choices" type="radio" name="x" id="root2" value="pg11" next="verb">
+      <label slot="choices" for="root2">Postgres 11</label>
+      <!--<input slot="choices" type="radio" name="x" id="root3" value="pg12" next="verb">
+      <label slot="choices" for="root3">Postgres 12</label>
+      <input slot="choices" type="radio" name="x" id="root4" value="pg13" next="verb">
+      <label slot="choices" for="root4">Postgres 13</label>-->
     </x-decision>
   </template>
 
   <template id="template-decision-verb">
     <x-decision>
       <span slot="question">I want to...</span>
-      <input slot="choices" type="radio" name="x" id="1" value="add" next="add">
-      <label slot="choices" for="1">Add Something</label>
+      <input slot="choices" type="radio" name="x" id="verb1" value="add" next="add">
+      <label slot="choices" for="verb1">Add Something</label>
       <!--<option slot="choices" next="change" value="change">Change Something</option>-->
       <!--<option slot="choices" next="drop" value="drop">Remove Something</option>-->
 
-      <input slot="choices" type="radio" name="x" id="4" value="data" next="result">
-      <label slot="choices" for="4">Alter Data</label>
+      <input slot="choices" type="radio" name="x" id="verb4" value="data" next="result">
+      <label slot="choices" for="verb4">Alter Data</label>
     </x-decision>
   </template>
 
   <template id="template-decision-add">
     <x-decision>
       <span slot="question">I want to...</span>
-      <input slot="choices" type="radio" name="x" id="1" value="column" next="is-null">
-      <label slot="choices" for="1">Add a Column</label>
+      <input slot="choices" type="radio" name="x" id="add1" value="column" next="is-null">
+      <label slot="choices" for="add1">Add a Column</label>
 
-      <input slot="choices" type="radio" name="x" id="2" value="index" next="result" >
-      <label slot="choices" for="2">Add a (Unique) Index</label>
+      <input slot="choices" type="radio" name="x" id="add2" value="index" next="result" >
+      <label slot="choices" for="add2">Add a (Unique) Index</label>
 
-      <input slot="choices" type="radio" name="x" id="3" value="constraint" next="result" >
-      <label slot="choices" for="3">Add a Constraint</label>
+      <input slot="choices" type="radio" name="x" id="add3" value="constraint" next="result" >
+      <label slot="choices" for="add3">Add a Constraint</label>
 
-      <input slot="choices" type="radio" name="x" id="4" value="foreign-key" next="result" >
-      <label slot="choices" for="4">Add a Foreign Key</label>
+      <input slot="choices" type="radio" name="x" id="add4" value="foreign-key" next="result" >
+      <label slot="choices" for="add4">Add a Foreign Key</label>
     </x-decision>
   </template>
 
   <template id="template-decision-is-null">
     <x-decision>
       <span slot="question">Is the column NULLable?</span>
-      <input slot="choices" type="radio" name="x" id="1" value="null" next="has-default">
-      <label slot="choices" for="1">NULLable</label>
+      <input slot="choices" type="radio" name="x" id="is-null1" value="null" next="has-default">
+      <label slot="choices" for="is-null1">NULLable</label>
 
-      <input slot="choices" type="radio" name="x" id="2" value="not-null" next="result">
-      <label slot="choices" for="2">NOT NULLable</label>
+      <input slot="choices" type="radio" name="x" id="is-null2" value="not-null" next="result">
+      <label slot="choices" for="is-null2">NOT NULLable</label>
     </x-decision>
   </template>
 
   <template id="template-decision-has-default">
     <x-decision>
       <span slot="question">Is there a database-side default value?</span>
-      <input slot="choices" type="radio" name="x" id="1" value="with-default" next="result">
-      <label slot="choices" for="1">With a Default</label>
+      <input slot="choices" type="radio" name="x" id="has-default1" value="with-default" next="result">
+      <label slot="choices" for="has-default1">With a Default</label>
 
-      <input slot="choices" type="radio" name="x" id="2" value="without-default" next="result">
-      <label slot="choices" for="2">Without a Default</label>
+      <input slot="choices" type="radio" name="x" id="has-default2" value="without-default" next="result">
+      <label slot="choices" for="has-default2">Without a Default</label>
     </x-decision>
   </template>
 
@@ -196,7 +261,7 @@ en dash:-
   </template>
 </div>
 
-<!-- Init Decisions -->
+<!-- Create Decisions Script -->
 <script>
   function addDecision(name) {
     if (name == "result") {
@@ -211,8 +276,8 @@ en dash:-
       element.remove();
     }
 
-    // Add new
-    const decision = document.createElement(tag);
+    // Add new decision
+    const decision = createDecisionElement(tag);
     decisions.appendChild(decision);
   };
 
@@ -227,46 +292,40 @@ en dash:-
     for (let decision of decisions) {
       const answer = getActiveRadio(
         decision
-        .shadowRoot
         .querySelectorAll('input[type="radio"]')
       );
       result += `__${answer}`
     }
 
-    console.log("result =", result);
+    console.log("current result =", result);
     return result;
   };
 
   function addResult() {
     const results = document.querySelector("#results");
     const answer = getAnswer();
-    const result = document.createElement(`x-result${answer}`);
-    console.log("adding result", result)
-    results.appendChild(result);
+    const result = createElement(`x-result${answer}`);
+    if (result !== null) {
+      results.appendChild(result);
+    }
   };
 
-  customElements.define('x-decision',
-    class extends HTMLElement {
-      constructor() {
-        super();
-        const template = document.querySelector('#template-decision').content;
-        const shadowRoot = this.attachShadow({mode: 'open'});
-        shadowRoot.appendChild(template.cloneNode(true));
+  function createDecisionElement(elementName) {
+    const newElement = createElement(elementName);
 
-        // Listen to choice selection
-        const radioElements = shadowRoot.host.querySelectorAll('input[type="radio"]');
-        for (let radioElement of radioElements) {
-          radioElement.addEventListener('change', (event) => {
-            if (event.target.checked) {
-              removeFuture(this.parentNode.host);
-              addDecision(event.target.getAttribute("next"));
-              addResult();
-            }
-          });
+    const radioElements = newElement.querySelectorAll('input[type="radio"]');
+    for (let radioElement of radioElements) {
+      radioElement.addEventListener('change', (event) => {
+        if (event.target.checked) {
+          removeFuture(event.target.parentNode.parentNode);
+          addDecision(event.target.getAttribute("next"));
+          addResult();
         }
-      }
+      });
     }
-  );
+
+    return newElement;
+  }
 
   function removeFuture(decisionElement) {
     removeNextSiblings(decisionElement);
@@ -287,47 +346,27 @@ en dash:-
       ele.remove();
     }
   }
-
-  const decisionTemplates = document.querySelector('#decisionTemplates').children;
-  for (let template of decisionTemplates) {
-    defineBasicTemplate(template.id);
-  };
 </script>
 
 
 <!-- Result Base Templates -->
 <template id="template-result-safe">
-  <style>
-    h1 {
-      color: green;
-    }
-  </style>
   <div>
-    <h1>Safe</h1>
+    <h1 class="safe">Safe</h1>
     <div><slot name="content"></slot></div>
   </div>
 </template>
 
 <template id="template-result-alternative">
-  <style>
-    h1 {
-      color: orange;
-    }
-  </style>
   <div>
-    <h1>Safe Alternative Possible</h1>
+    <h1 class="alternative">Safe Alternative Possible</h1>
     <div><slot name="content"></slot></div>
   </div>
 </template>
 
 <template id="template-result-unsafe">
-  <style>
-    h1 {
-      color: red;
-    }
-  </style>
   <div>
-    <h1>Unsafe</h1>
+    <h1 class="unsafe">Unsafe</h1>
     <div><slot name="content"></slot></div>
   </div>
 </template>
@@ -455,7 +494,7 @@ en dash:-
     </x-result-alternative>
   </template>
 
-  <template id="template-result__pg9.6__data">
+  <template id="template-result__pg96__data">
     <x-result-alternative>
       <div slot="content">
         <p>The following kinds of data migrations are unsafe:
@@ -513,18 +552,20 @@ commit;
   </template>
 
   <template id="template-result__pg11__data">
-    <x-result__pg9.6__data></x-result__pg9.6__data>
+    <x-result__pg96__data></x-result__pg96__data>
   </template>
 
   <template id="template-result__pg12__data">
-    <x-result__pg9.6__data></x-result__pg9.6__data>
+    <x-result__pg96__data></x-result__pg96__data>
   </template>
 
   <template id="template-result__pg13__data">
-    <x-result__pg9.6__data></x-result__pg9.6__data>
+    <x-result__pg96__data></x-result__pg96__data>
   </template>
+</div>
 
-  <!-- Snippets -->
+<!-- Result Snippets -->
+</div>
   <template id="template-result-snippet-access-exclusive-lock">
     <aside>
       <p>
@@ -590,7 +631,8 @@ commit;
           <code>UPDATE</code> SQL.
         <p>
           On the other hand, it <em>can</em> conflict with other migrations, so
-          make sure you only do one migration at a time, including data migrations.
+          make sure you only do one migration at a time and this includes data
+          migrations.
       </details>
     </aside>
   </template>
@@ -829,21 +871,8 @@ done
       </details>
     </aside>
   </template>
-
 </div>
 
-
-<!-- Result init -->
-<script>
-  defineBasicTemplate("template-result-safe");
-  defineBasicTemplate("template-result-alternative");
-  defineBasicTemplate("template-result-unsafe");
-
-  const resultTemplates = document.querySelector('#resultTemplates').children;
-  for (let template of resultTemplates) {
-    defineBasicTemplate(template.id);
-  };
-</script>
 
 
 <!-- Start -->
@@ -852,9 +881,21 @@ done
     <h1 style="display: inline">migrations.guide</h1>
     <br>
     <sub>Will my migration cause an application outage?</sub>
+    <noscript>
+      <h2>Sorry, JavaScript is Required</h2>
+      <p>This is an interactive flow chart that requires JavaScript.
+      <p>
+        I don't really like JavaScript and there <em>is</em> an alternative,
+        but that is not up-to-date and contains incorrect information
+      <p>One day I'll add a link to it.
+    </noscript>
   </div>
-  <section id="decisions">
-    <x-decision-root></x-decision-root>
-  </section>
+
+  <section id="decisions"></section>
   <section id="results"></section>
 </main>
+
+<script>
+  const rootElement = createDecisionElement("x-decision-root");
+  document.querySelector("#decisions").appendChild(rootElement);
+</script>
