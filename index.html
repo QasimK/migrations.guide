@@ -76,6 +76,12 @@ Em dash:—
     color: #eee;
     padding: 1em;
   }
+
+  /* Other */
+  video {
+    display: block;
+    margin: 0 auto;
+  }
 </style>
 
 
@@ -174,7 +180,7 @@ Em dash:—
 </template>
 
 <!-- Decision Templates -->
-<div id="decisionTemplates">
+<div>
   <template id="template-decision-root">
     <x-decision>
       <span slot="question">I am using...</span>
@@ -182,10 +188,10 @@ Em dash:—
       <label slot="choices" for="root1">Postgres 9.6</label>
       <input slot="choices" type="radio" name="x" id="root2" value="pg11" next="verb">
       <label slot="choices" for="root2">Postgres 11</label>
-      <!--<input slot="choices" type="radio" name="x" id="root3" value="pg12" next="verb">
+      <input slot="choices" type="radio" name="x" id="root3" value="pg12" next="verb">
       <label slot="choices" for="root3">Postgres 12</label>
       <input slot="choices" type="radio" name="x" id="root4" value="pg13" next="verb">
-      <label slot="choices" for="root4">Postgres 13</label>-->
+      <label slot="choices" for="root4">Postgres 13</label>
     </x-decision>
   </template>
 
@@ -194,7 +200,10 @@ Em dash:—
       <span slot="question">I want to...</span>
       <input slot="choices" type="radio" name="x" id="verb1" value="add" next="add">
       <label slot="choices" for="verb1">Add Something</label>
-      <!--<option slot="choices" next="change" value="change">Change Something</option>-->
+
+      <input slot="choices" type="radio" name="x" id="verb2" value="change" next="change">
+      <label slot="choices" for="verb2">Change Something</label>
+
       <!--<option slot="choices" next="drop" value="drop">Remove Something</option>-->
 
       <input slot="choices" type="radio" name="x" id="verb4" value="data" next="result">
@@ -214,7 +223,7 @@ Em dash:—
       <input slot="choices" type="radio" name="x" id="add3" value="constraint" next="result" >
       <label slot="choices" for="add3">Add a Constraint</label>
 
-      <input slot="choices" type="radio" name="x" id="add4" value="foreign-key" next="result" >
+      <input slot="choices" type="radio" name="x" id="add4" value="foreign_key" next="result" >
       <label slot="choices" for="add4">Add a Foreign Key</label>
     </x-decision>
   </template>
@@ -225,7 +234,7 @@ Em dash:—
       <input slot="choices" type="radio" name="x" id="is-null1" value="null" next="has-default">
       <label slot="choices" for="is-null1">NULLable</label>
 
-      <input slot="choices" type="radio" name="x" id="is-null2" value="not-null" next="result">
+      <input slot="choices" type="radio" name="x" id="is-null2" value="not_null" next="result">
       <label slot="choices" for="is-null2">NOT NULLable</label>
     </x-decision>
   </template>
@@ -233,10 +242,10 @@ Em dash:—
   <template id="template-decision-has-default">
     <x-decision>
       <span slot="question">Is there a database-side default value?</span>
-      <input slot="choices" type="radio" name="x" id="has-default1" value="with-default" next="result">
+      <input slot="choices" type="radio" name="x" id="has-default1" value="with_default" next="result">
       <label slot="choices" for="has-default1">With a Default</label>
 
-      <input slot="choices" type="radio" name="x" id="has-default2" value="without-default" next="result">
+      <input slot="choices" type="radio" name="x" id="has-default2" value="without_default" next="result">
       <label slot="choices" for="has-default2">Without a Default</label>
     </x-decision>
   </template>
@@ -244,8 +253,16 @@ Em dash:—
   <template id="template-decision-change">
     <x-decision>
       <span slot="question">I want to...</span>
+
+      <input slot="choices" type="radio" name="x" id="change1" value="table" next="result">
+      <label slot="choices" for="change1">Rename a Table</label>
+
+      <input slot="choices" type="radio" name="x" id="change2" value="column" next="result">
+      <label slot="choices" for="change2">Rename a Column</label>
+
+      <input slot="choices" type="radio" name="x" id="change3" value="to_not_null" next="result">
+      <label slot="choices" for="change3">Make a Column NOT NULLable</label>
       <!--
-        Rename a Column
         Make Column NOT NULL
       -->
     </x-decision>
@@ -372,8 +389,17 @@ Em dash:—
 </template>
 
 <!-- Result Templates -->
-<div id="resultTemplates">
-  <template id="template-result__pg11__add__column__null__with-default">
+<div>
+
+  <template id="template-result__pg96__add__column__null__with_default">
+    <x-result-altenative>
+      <div slot="content">
+        <p>Unsafe due to default, but alternative is possible.
+      </div>
+    </x-result-altenative>
+  </template>
+
+  <template id="template-result__pg11__add__column__null__with_default">
     <x-result-alternative>
       <div slot="content">
         <p>It is unsafe to add a new column:
@@ -398,7 +424,23 @@ Em dash:—
     </x-result-unsafe>
   </template>
 
-  <template id="template-result__pg11__add__column__null__without-default">
+  <template id="template-result__pg12__add__column__null__with_default">
+    <x-result__pg11__add__column__null__with_default></x-result__pg11__add__column__null__with_default>
+  </template>
+
+  <template id="template-result__pg13__add__column__null__with_default">
+    <x-result__pg11__add__column__null__with_default></x-result__pg11__add__column__null__with_default>
+  </template>
+
+  <template id="template-result__pg96__add__column__null__without_default">
+    <x-result-alternative>
+      <div slot="content">
+        <p>Somewhat safe.
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__add__column__null__without_default">
     <x-result-alternative>
       <div slot="content">
         <p>It is unsafe to add a new column:
@@ -428,13 +470,42 @@ Em dash:—
     </x-result-unsafe>
   </template>
 
-  <template id="template-result__pg11__add__column__not-null">
+  <template id="template-result__pg12__add__column__null__without_default">
+    <x-result__pg11__add__column__null__without_default></x-result__pg11__add__column__null__without_default>
+  </template>
+
+  <template id="template-result__pg13__add__column__null__without_default">
+    <x-result__pg11__add__column__null__without_default></x-result__pg11__add__column__null__without_default>
+  </template>
+
+
+  <template id="template-result__pg96__add__column__not_null">
     <x-result-alternative>
       <div slot="content">
+        <p>This is unsafe.
+        <p>You're best bet is to compromise and add a NULL column, and a separate
+          check constraint.
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__add__column__not_null">
+    <x-result-alternative>
+      <div slot="content">
+        <p>Add not null - safe alternative possible.
         <x-result-snippet-access-exclusive-lock></x-result-snippet-access-exclusive-lock>
       </div>
-    </x-result-unsafe>
+    </x-result-alternative>
   </template>
+
+  <template id="template-result__pg12__add__column__not_null">
+    <x-result__pg11__add__column__not_null></x-result__pg11__add__column__not_null>
+  </template>
+
+  <template id="template-result__pg13__add__column__not_null">
+    <x-result__pg11__add__column__not_null></x-result__pg11__add__column__not_null>
+  </template>
+
 
   <template id="template-result__pg11__add__index">
     <x-result-alternative>
@@ -494,13 +565,214 @@ Em dash:—
     </x-result-alternative>
   </template>
 
+
+  <template id="template-result__pg96__add__constraint">
+    <x-result-alternative>
+      <div slot="content">
+        <p>Incomplete - add constraint.
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__add__constraint">
+    <x-result__pg96__add__constraint></x-result__pg96__add__constraint>
+  </template>
+
+  <template id="template-result__pg12__add__constraint">
+    <x-result__pg96__add__constraint></x-result__pg96__add__constraint>
+  </template>
+
+  <template id="template-result__pg13__add__constraint">
+    <x-result__pg96__add__constraint></x-result__pg96__add__constraint>
+  </template>
+
+
+  <template id="template-result__pg96__add__foreign_key">
+    <x-result-alternative>
+      <div slot="content">
+        <p>Incomplete - add foreign key.
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__add__foreign_key">
+    <x-result__pg96__add__foreign_key></x-result__pg96__add__foreign_key>
+  </template>
+
+  <template id="template-result__pg12__add__foreign_key">
+    <x-result__pg96__add__foreign_key></x-result__pg96__add__foreign_key>
+  </template>
+
+  <template id="template-result__pg13__add__foreign_key">
+    <x-result__pg96__add__foreign_key></x-result__pg96__add__foreign_key>
+  </template>
+
+
+  <template id="template-result__pg96__change__table">
+    <x-result-unsafe>
+      <div slot="content">
+        <p style="text-align: center">Good luck with that mate.</p>
+        <video src="abandon-hope.mp4" autoplay playsinline loop muted>
+          <source src="abandon-hope.mp4" type="video/mp4">
+          <p>
+            Your browser does not support playing inline videos, this is the direct
+            link to the video: <a href="abandon-hope.mp4">abandon-hope.mp4</a>
+        </video>
+      </div>
+    </x-result-unsafe>
+  </template>
+
+  <template id="template-result__pg11__change__table">
+    <x-result__pg96__change__table></x-result__pg96__change__table>
+  </template>
+
+  <template id="template-result__pg12__change__table">
+    <x-result__pg96__change__table></x-result__pg96__change__table>
+  </template>
+
+  <template id="template-result__pg13__change__table">
+    <x-result__pg96__change__table></x-result__pg96__change__table>
+  </template>
+
+
+  <template id="template-result__pg96__change__column">
+    <x-result-alternative>
+      <div slot="content">
+        <p>
+          A rename must be treated as <strong>adding a column</strong>,
+          then <strong>backfilling data</strong>, then
+          <strong>removing a column</strong>, which means it has the pitfalls
+          of all three, along with the problem of
+          <strong>synchronising writes</strong> to the old and new columns.
+        <h2>Safe Alternative</h2>
+        <ol>
+          <li>Add the new column.
+          <li>Synchronise writes to both columns.
+          <li>Backfill data to the new column.
+          <li>Read and write to the new column in the application.
+          <li>Remove the old column and any remaining synchronisation.
+        </ol>
+        <p>
+          This remaining part of this section will detail the synchronisation
+          process only. Other sections of this guide (by following the flow
+          chart again) detail how to do each of the other above steps safely.
+        <p>
+          There are three possible strategies for synchronising writes to both
+          columns:
+        <ol>
+          <li>
+            Use database-level triggers to synchronise the new column with the
+            old column and vica versa.
+          <li>
+            Use ORM framework-level synchronisation to synchronise the fields
+            across the whole application automatically.
+          <li>
+            <em>(Not recommended.)</em> Use application-level synchronisation,
+            where the fields are manually synchronised in code at each line the
+            fields are modified.
+        </ol>
+        <p>
+          <strong>NOTE:</strong> This section is incompletely and does not
+          tell you how to do each strategy <em>yet</em>.
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__change__column">
+    <x-result__pg96__change__column></x-result__pg96__change__column>
+  </template>
+
+  <template id="template-result__pg12__change__column">
+    <x-result__pg96__change__column></x-result__pg96__change__column>
+  </template>
+
+  <template id="template-result__pg13__change__column">
+    <x-result__pg96__change__column></x-result__pg96__change__column>
+  </template>
+
+
+  <template id="template-result__pg96__change__to_not_null">
+    <x-result-alternative>
+      <div slot="content">
+        <p>
+          It is <strong>unsafe</strong> to make a column <code>NOT NULL</code>:
+<pre><code><!--
+-->ALTER TABLE table COLUMN column SET NOT NULL;
+</code></pre>
+        <p>
+          All queries of every kind will be blocked until the migration is
+          complete because an <code>ACCESS EXCLUSIVE</code> lock is required.
+          Since a full table scan is required to validate the constraint, this
+          could take a long time for large tables.
+        <h2>Safe Alternative</h2>
+        <p>
+          Create a <code>NOT NULL</code> check constraint instead.
+<pre><code><!--
+-->ALTER TABLE table ADD CONSTRAINT constraint CHECK (column IS NOT NULL) NOT VALID;
+ALTER TABLE table VALIDATE CONSTRAINT constraint;
+</code></pre>
+        <p>
+          In order to do this safely, please see
+          <strong>Add Something > Add a Constraint</strong>.
+          <em>Sorry to redirect you!</em>
+        <p>
+          That's it... Until Postgres 12 where this check constraint can be
+          converted into a proper <code>NOT NULL</code> constraint.
+
+        <hr>
+        <x-result-snippet-access-exclusive-lock></x-result-snippet-access-exclusive-lock>
+        <x-result-snippet-lock-queue></x-result-snippet-lock-queue>
+        <x-result-snippet-how-to-get-lock></x-result-snippet-how-to-get-lock>
+        <p>
+        <details>
+          <summary>
+            What are the disadvantages of a <code>NOT NULL</code> check constraint
+          </summary>
+          <ul>
+            <li>
+              People may not realise the column is <code>NOT NULL</code> because
+              the constraint belongs to the table rather than being an option
+              on the column.
+            <li>
+              Writes are slower (~0.5-1% hit)
+            <li>
+              Managing a constraint may be more complicated with your ORM and
+              migration framework(s).
+          </ul>
+        </details>
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg11__change__to_not_null">
+    <x-result__pg96__change__to_not_null></x-result__pg96__change__to_not_null>
+  </template>
+
+  <template id="template-result__pg12__change__to_not_null">
+    <x-result-alternative>
+      <div slot="content">
+        <p>
+          It is <strong>unsafe</strong> to make a column <code>NOT NULL</code>:
+<pre><code><!--
+-->ALTER TABLE table COLUMN column SET NOT NULL;
+</code></pre>
+        <p>...
+      </div>
+    </x-result-alternative>
+  </template>
+
+  <template id="template-result__pg13__change__to_not_null">
+    <x-result__pg12__change__to_not_null></x-result__pg12__change__to_not_null>
+  </template>
+
+
   <template id="template-result__pg96__data">
     <x-result-alternative>
       <div slot="content">
         <p>The following kinds of data migrations are unsafe:
 <pre><code><!--
--->UPDATE table SET column=value;
-UPDATE table SET column=value WHERE condition;
+-->UPDATE table SET column = value;
+UPDATE table SET column = value WHERE condition;
 </code></pre>
         <p>
           Where many rows are updated, this will take a long time to complete,
@@ -528,7 +800,7 @@ begin;
 \timing on
 
 UPDATE table
-SET column=value
+SET column = value
 WHERE
       id >= (:v1 + 0) * 1000
   AND id <  (:v1 + 1) * 1000
@@ -581,7 +853,7 @@ commit;
           <li><code>DELETE</code>
         </ul>
         <p>
-          If a transaction is used, the rows will be locked until the
+          If a transaction is used, all rows will be locked until the
           transaction is committed.
         <p>
           <strong>Warning:</strong> A migration needing this lock will block
@@ -654,7 +926,7 @@ commit;
         </ul>
         <p>
           This lock only blocks the selected rows, rather than the whole table.
-          However, <code>UPDATE table SET column=value;</code> will effectively
+          However, <code>UPDATE table SET column = value;</code> will effectively
           lock the entire table.
         <p>
           If a transaction is used, the rows will be locked until the

@@ -1,0 +1,11 @@
+Postgres 12:
+
+* NOT NULL constraint can be turned into a NOT NULL field option.
+
+https://news.ycombinator.com/item?id=21080303
+
+Postgres 11
+
+* ALTER TABLE ADD COLUMN ... DEFAULT is safe (no table re-write)
+
+https://dataegret.com/2018/03/waiting-for-postgresql-11-pain-free-add-column-with-non-null-defaults/
